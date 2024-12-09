@@ -3,6 +3,7 @@ import cv2
 import logging
 from tqdm import tqdm
 
+
 def get_mask(image):
     # convert to grayscale
     gray = cv2.cvtColor(image,cv2.COLOR_BGR2GRAY)
@@ -31,14 +32,14 @@ def crop_to_content(image, mask):
 
 
 def run_preprocessing():
-    input_dataset_base_path = './handwritten_dataset'
-    output_dataset_base_path = './handwritten_dataset_processed'
-    labels = pd.read_csv(f'{input_dataset_base_path}/labels.csv')
+    input_dataset_base_path = "./data/handwritten_dataset"
+    output_dataset_base_path = "./data/handwritten_dataset_processed"
+    labels = pd.read_csv(f"{input_dataset_base_path}/labels.csv")
 
-    logging.info(f'start preprocessing of {len(labels)} images')
+    logging.info(f"start preprocessing of {len(labels)} images")
 
     for _, label in tqdm(labels.iterrows(), total=len(labels)):
-        image_path = label['image']
+        image_path = label["image"]
         image = cv2.imread(f'{input_dataset_base_path}/{image_path}')
 
         # process image
@@ -48,4 +49,4 @@ def run_preprocessing():
 
         cv2.imwrite(f'{output_dataset_base_path}/{image_path}', image)
     
-    logging.info(f'preprocessing complete')
+    logging.info(f"preprocessing complete")
