@@ -40,6 +40,43 @@ def overlay_image(background, overlay, position):
     return background
 
 
+def preprocess_images_to_concat(images_to_concat, processing: str):
+    max_height = max(map(lambda x: x.shape[0], images_to_concat))
+    images_to_concat_processed = []
+    
+    # pad images to fit the largest one
+    if processing == "padding":
+        for image in images_to_concat:
+            pad_height = max_height - image.shape[0]
+            
+            padded_image = cv2.copyMakeBorder(
+                image,
+                top=pad_height, bottom=0, left=0, right=0,
+                borderType=cv2.BORDER_CONSTANT,
+                value=[0, 0, 0, 0]  # Transparent (RGBA)
+            )
+
+            images_to_concat_processed.append(padded_image)
+    
+    # scale images to fit the largest one
+    elif processing == "scaling":
+        for image in images_to_concat:
+            image_width = image.shape[1]
+            image_height = image.shape[0]
+            
+            new_width = int(image_width * (max_height / image_height))
+            new_height = max_height
+            
+            letter_scaled = cv2.resize(image, (new_width, new_height), interpolation=cv2.INTER_AREA)
+
+            images_to_concat_processed.append(letter_scaled)
+
+    else:
+        raise ValueError("processing not valid")
+
+    return images_to_concat_processed
+
+
 def get_rand_string_image(rand_string):
     images_to_concat = []
     handwritten_dataset_base_path = "./data/handwritten_dataset"
@@ -54,20 +91,7 @@ def get_rand_string_image(rand_string):
         character_image = cv2.imread(f"{handwritten_dataset_processed_base_path}/{character_image_path}", flags=cv2.IMREAD_UNCHANGED)
         images_to_concat.append(character_image)
 
-    # pad images to fit the largest one
-    max_height = max(map(lambda x: x.shape[0], images_to_concat))
-    images_to_concat_padded = []
-    
-    for image in images_to_concat:
-        pad_height = max_height - image.shape[0]
-        
-        padded_image = cv2.copyMakeBorder(
-            image,
-            top=pad_height, bottom=0, left=0, right=0,
-            borderType=cv2.BORDER_CONSTANT,
-            value=[0, 0, 0, 0]  # Transparent (RGBA)
-        )
 
-        images_to_concat_padded.append(padded_image)
+    images_to_concat_processed = preprocess_images_to_concat(images_to_concat, processing="scaling")
 
-    return cv2.hconcat(images_to_concat_padded)
+    return cv2.hconcat(images_to_concat_processed)

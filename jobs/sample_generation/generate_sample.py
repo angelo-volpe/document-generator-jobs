@@ -36,7 +36,7 @@ def run_sampling():
     doc_height = document_image.shape[0]
     doc_width = document_image.shape[1]
 
-    results_dict = {}
+    results = []
 
     for sample_id in tqdm(range(sample_size)):
         document_with_strings = document_image.copy()
@@ -46,9 +46,6 @@ def run_sampling():
         for box in boxes:
             string_length = int(np.random.normal(box["mean_length"], 1))
             rand_string = generate_random_string(string_length, box["is_alphabetic"], box["is_numeric"])
-            boxes_labels.append({"box_id": box["id"],
-                                 "box_name": box["name"],
-                                 "generated_string": rand_string})
 
             rand_string_image = get_rand_string_image(rand_string)
 
@@ -75,13 +72,20 @@ def run_sampling():
 
             document_with_strings = overlay_image(background=document_with_strings, overlay=rand_string_image_scaled, position=(start_x, start_y))
 
+            end_x = start_x + new_width
+            end_y = start_y + new_height
+
+            boxes_labels.append({"box_id": box["id"],
+                                 "box_name": box["name"],
+                                 "generated_string": rand_string,
+                                 "position": [[start_x, start_y], [end_x, start_y], [end_x, end_y], [start_x, end_y]]})
+
         if cv2.imwrite(f"{sample_folder}/sample_{sample_id}.png", document_with_strings):
             pass
         else:
             raise ValueError("unable to save sample image")
         
-        results_dict["sample_id"] = sample_id
-        results_dict["boxes_labels"] = boxes_labels
+        results.append({"sample_id": sample_id, "boxes_labels": boxes_labels})
 
     with open(f"{sample_folder}/sample_labels.json", "w") as json_file:
-        json.dump(results_dict, json_file)
+        json.dump(results, json_file)
