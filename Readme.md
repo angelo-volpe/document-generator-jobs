@@ -8,12 +8,31 @@ https://www.kaggle.com/datasets/dhruvildave/english-handwritten-characters-datas
 
 ### How to run jobs
 
+#### In local environment
+
 Run Handwritten Dataset Preprocessing Job
 ```
-python main.py --job_name hw_preprocessing
+python -m jobs.sample_generation.generate_sample 
 ```
 
 Run Sample Generation Job
 ```
 python main.py --job_name sampling
+```
+
+#### using Docker
+```
+docker build . -t document-generator-jobs:latest
+docker run --rm \
+           --network host \
+           --mount type=bind,source=./data,target=/app/data \
+           --name document-generator-jobs \
+           document-generator-jobs:latest --job_name sampling
+```
+
+### Start Airflow
+In airflow directory
+```
+docker-compose up airflow-init
+docker-compose up
 ```
