@@ -1,4 +1,5 @@
 import requests
+import logging
 
 
 def get_image_and_boxes(document_id: str):
@@ -21,10 +22,18 @@ def get_image_and_boxes(document_id: str):
     return document_image_buffer, boxes
 
 
-def denormalise_box_coordinates(start_x_norm, start_y_norm, end_x_norm, end_y_norm, doc_width, doc_height):
-    start_x = int(start_x_norm * doc_width)
-    end_x = int(end_x_norm * doc_width)
-    start_y = int(start_y_norm * doc_height)
-    end_y = int(end_y_norm * doc_height)
-    
-    return start_x, start_y, end_x, end_y
+def publish_sample_image(image_path, sample_id, document_id):
+    url = "http://localhost:8000/document_generator/api/sample_documents/"
+    files = {
+        "image": open(image_path, "rb")
+    }
+    data = {
+        "name": f"sample_{sample_id}",
+        "template_document": document_id
+    }
+
+    with requests.Session() as session:
+        response = session.post(url, files=files, data=data)
+
+    if response.status_code != 201:
+        logging.error(f"unable to publish image: sample_{sample_id}, status: {response.status_code}")

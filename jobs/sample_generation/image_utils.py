@@ -95,3 +95,12 @@ def get_rand_string_image(rand_string):
     images_to_concat_processed = preprocess_images_to_concat(images_to_concat, processing="scaling")
 
     return cv2.hconcat(images_to_concat_processed)
+
+
+def denormalise_box_coordinates(start_x_norm, start_y_norm, end_x_norm, end_y_norm, doc_width, doc_height):
+    start_x = int(start_x_norm * doc_width)
+    end_x = int(end_x_norm * doc_width)
+    start_y = int(start_y_norm * doc_height)
+    end_y = int(end_y_norm * doc_height)
+    
+    return start_x, start_y, end_x, end_y

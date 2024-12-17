@@ -6,8 +6,8 @@ import json
 from pathlib import Path
 from tqdm import tqdm
 
-from .api_utils import get_image_and_boxes, denormalise_box_coordinates
-from .image_utils import get_rand_string_image, overlay_image
+from .api_utils import get_image_and_boxes, publish_sample_image
+from .image_utils import get_rand_string_image, overlay_image, denormalise_box_coordinates
 
 
 def generate_random_string(length, is_alphabetic, is_numeric):
@@ -22,10 +22,7 @@ def generate_random_string(length, is_alphabetic, is_numeric):
     return "".join(random.choices(characters, k=length))
 
 
-def run_sampling():
-    # TODO pass as job input
-    document_id = "1"
-    sample_size = 10
+def run_sampling(document_id, num_samples):
     sample_folder = Path(f"./data/sampling/document_{document_id}")
 
     sample_folder.mkdir(parents=True, exist_ok=True)
@@ -38,7 +35,7 @@ def run_sampling():
 
     results = []
 
-    for sample_id in tqdm(range(sample_size)):
+    for sample_id in tqdm(range(num_samples)):
         document_with_strings = document_image.copy()
 
         boxes_labels = []
@@ -80,10 +77,13 @@ def run_sampling():
                                  "generated_string": rand_string,
                                  "position": [[start_x, start_y], [end_x, start_y], [end_x, end_y], [start_x, end_y]]})
 
-        if cv2.imwrite(f"{sample_folder}/sample_{sample_id}.png", document_with_strings):
+        image_path = f"{sample_folder}/sample_{sample_id}.png"
+        if cv2.imwrite(image_path, document_with_strings):
             pass
         else:
             raise ValueError("unable to save sample image")
+        
+        publish_sample_image(image_path, sample_id, document_id)
         
         results.append({"sample_id": sample_id, "boxes_labels": boxes_labels})
 

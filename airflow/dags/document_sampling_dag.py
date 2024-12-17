@@ -1,10 +1,10 @@
 from airflow import DAG
 from airflow.providers.docker.operators.docker import DockerOperator
+from airflow.operators.python_operator import PythonOperator
 from datetime import timedelta
 from docker.types import Mount
 
 
-# Default arguments for the DAG
 default_args = {
     "owner": "fox",
     "depends_on_past": False,
@@ -15,7 +15,7 @@ default_args = {
     "retry_delay": timedelta(minutes=5),
 }
 
-# Define the DAG
+
 with DAG(
     "generate_document_samples",
     default_args=default_args,
@@ -23,7 +23,7 @@ with DAG(
     schedule_interval=None,
     catchup=False,
 ) as dag:
-    
+        
     generate_samples = DockerOperator(
         task_id="generate_samples",
         image="document-generator-jobs:latest",
@@ -33,5 +33,5 @@ with DAG(
         network_mode="host",
         mounts=[Mount(source="/Users/volpea/Documents/projects/document-generator-job/data", target="/app/data", type="bind")],
         mount_tmp_dir=False,
-        command="--job_name sampling",
+        command="--job_name sampling" + "{{ '--document_id ' + dag_run.conf['document_id'] + ' --num_samples ' + dag_run.conf['num_samples'] }}",
     )
