@@ -6,8 +6,8 @@ import json
 from pathlib import Path
 from tqdm import tqdm
 
-from .api_utils import get_image_and_boxes, publish_sample_image
-from .image_utils import get_rand_string_image, overlay_image, denormalise_box_coordinates
+from .api_utils import get_image_and_boxes, publish_sample_image, publish_box_labels
+from .image_utils import get_rand_string_image, overlay_image, denormalise_box_coordinates, normalise_box_coordinates
 
 
 def generate_random_string(length, is_alphabetic, is_numeric):
@@ -33,7 +33,7 @@ def run_sampling(document_id, num_samples):
     doc_height = document_image.shape[0]
     doc_width = document_image.shape[1]
 
-    results = []
+    # results = []
 
     for sample_id in tqdm(range(num_samples)):
         document_with_strings = document_image.copy()
@@ -72,20 +72,28 @@ def run_sampling(document_id, num_samples):
             end_x = start_x + new_width
             end_y = start_y + new_height
 
-            boxes_labels.append({"box_id": box["id"],
-                                 "box_name": box["name"],
-                                 "generated_string": rand_string,
-                                 "position": [[start_x, start_y], [end_x, start_y], [end_x, end_y], [start_x, end_y]]})
+            start_x_norm, start_y_norm, end_x_norm, end_y_norm = normalise_box_coordinates(start_x, start_y, end_x, end_y, doc_width, doc_height)
+
+            boxes_labels.append({"template_box_id": box["id"],
+                                 "name": box["name"],
+                                 "label": rand_string,
+                                 "start_x_norm": start_x_norm,
+                                 "start_y_norm": start_y_norm,
+                                 "end_x_norm": end_x_norm,
+                                 "end_y_norm": end_y_norm})
 
         image_path = f"{sample_folder}/sample_{sample_id}.png"
+
+        # TODO use only for debugging
         if cv2.imwrite(image_path, document_with_strings):
             pass
         else:
             raise ValueError("unable to save sample image")
         
-        publish_sample_image(image_path, sample_id, document_id)
+        sample_document_id = publish_sample_image(image_path, sample_id, document_id)
+        publish_box_labels(boxes_labels, sample_document_id)
         
-        results.append({"sample_id": sample_id, "boxes_labels": boxes_labels})
+        # results.append({"sample_id": sample_id, "boxes_labels": boxes_labels})
 
-    with open(f"{sample_folder}/sample_labels.json", "w") as json_file:
-        json.dump(results, json_file)
+    # with open(f"{sample_folder}/sample_labels.json", "w") as json_file:
+    #    json.dump(results, json_file)

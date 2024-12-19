@@ -5,13 +5,18 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Debug Preprocessing",
+            "name": "Debug Sampling Job",
             "type": "debugpy",
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
             "args": [
-                "--job_name preprocessing"
+                "--job_name",
+                "sampling",
+                "--document_id",
+                "5",
+                "--num_samples",
+                "1"
             ]
         },
     ]

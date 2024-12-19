@@ -104,3 +104,12 @@ def denormalise_box_coordinates(start_x_norm, start_y_norm, end_x_norm, end_y_no
     end_y = int(end_y_norm * doc_height)
     
     return start_x, start_y, end_x, end_y
+
+
+def normalise_box_coordinates(start_x, start_y, end_x, end_y, doc_width, doc_height):
+    start_x_norm = start_x / doc_width
+    end_x_norm = end_x / doc_width
+    start_y_norm = start_y / doc_height
+    end_y_norm = end_y / doc_height
+    
+    return start_x_norm, start_y_norm, end_x_norm, end_y_norm

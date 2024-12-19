@@ -1,6 +1,5 @@
 from airflow import DAG
 from airflow.providers.docker.operators.docker import DockerOperator
-from airflow.operators.python_operator import PythonOperator
 from datetime import timedelta
 from docker.types import Mount
 

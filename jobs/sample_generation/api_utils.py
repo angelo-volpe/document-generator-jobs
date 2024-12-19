@@ -37,3 +37,19 @@ def publish_sample_image(image_path, sample_id, document_id):
 
     if response.status_code != 201:
         logging.error(f"unable to publish image: sample_{sample_id}, status: {response.status_code}")
+
+    return response.json()["id"]  
+
+
+def publish_box_labels(boxes_labels, sample_document_id):
+    url = "http://localhost:8000/document_generator/api/sample_boxes/create_sample_boxes/"
+    data = {
+        "sample_document_id": sample_document_id,
+        "boxes": boxes_labels
+    }
+
+    with requests.Session() as session:
+        response = session.post(url, json=data)
+
+    if response.status_code != 201:
+        logging.error(f"unable to publish box labels for sample_document_id: {sample_document_id}, status: {response.status_code}")
