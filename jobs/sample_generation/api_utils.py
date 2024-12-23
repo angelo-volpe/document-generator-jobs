@@ -4,7 +4,7 @@ import logging
 
 def get_image_and_boxes(document_id: str):
     with requests.Session() as session:
-        res_document = session.get(f"http://localhost:8000/document_generator/documents/{document_id}")
+        res_document = session.get(f"http://localhost:8000/document_generator/api/documents/{document_id}")
         res_boxes = session.get(f"http://localhost:8000/document_generator/{document_id}/boxes")
     
         if res_document.status_code == 200 and res_boxes.status_code == 200:
