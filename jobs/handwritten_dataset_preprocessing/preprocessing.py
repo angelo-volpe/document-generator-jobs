@@ -31,7 +31,7 @@ def crop_to_content(image, mask):
     return image[y:y+h, x:x+w]
 
 
-def run_preprocessing():
+def run_hw_preprocessing():
     input_dataset_base_path = "./data/handwritten_dataset"
     output_dataset_base_path = "./data/handwritten_dataset_processed"
     labels = pd.read_csv(f"{input_dataset_base_path}/labels.csv")

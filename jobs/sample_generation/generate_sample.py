@@ -2,7 +2,6 @@ import cv2
 import numpy as np
 import string
 import random
-import json
 from pathlib import Path
 from tqdm import tqdm
 

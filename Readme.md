@@ -12,12 +12,17 @@ https://www.kaggle.com/datasets/dhruvildave/english-handwritten-characters-datas
 
 Run Handwritten Dataset Preprocessing Job
 ```
-python -m jobs.sample_generation.generate_sample 
+python main.py --job_name hw_preprocessing
 ```
 
 Run Sample Generation Job
 ```
-python main.py --job_name sampling
+python main.py --job_name sampling --document_id 3 --num_samples 10
+```
+
+Run Sample Preprocessing Job
+```
+python main.py --job_name sample_preprocessing --document_id 5
 ```
 
 #### using Docker
