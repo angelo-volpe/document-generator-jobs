@@ -51,21 +51,23 @@ def train_test_split(document_id: int, images, split_percentage=0.9):
     logger.info(f"Writing train samples")
     train_annotations = []
     for sample in tqdm(train_samples):
+        image_file = f"sample_{sample["sample_id"]}.png"
         image_path = fine_tuning_dataset_path / f"train_images/"
         image_path.mkdir(parents=True, exist_ok=True)
-        sample["image"].save(image_path / f"sample_{sample["sample_id"]}.png")
+        sample["image"].save(image_path / image_file)
 
-        train_annotation = str(image_path) + "\t" + sample["annotations"]
+        train_annotation = image_file + "\t" + sample["annotations"]
         train_annotations.append(train_annotation)
 
     logger.info(f"Writing validation samples")
     val_annotations = []
     for sample in tqdm(val_samples):
+        image_file = f"sample_{sample["sample_id"]}.png"
         image_path = fine_tuning_dataset_path / f"val_images/"
         image_path.mkdir(parents=True, exist_ok=True)
-        sample["image"].save(image_path / f"sample_{sample["sample_id"]}.png")
+        sample["image"].save(image_path / image_file)
 
-        val_annotation = str(image_path) + "\t" + sample["annotations"]
+        val_annotation = image_file + "\t" + sample["annotations"]
         val_annotations.append(val_annotation)
 
     logger.info(f"Writing labels")
