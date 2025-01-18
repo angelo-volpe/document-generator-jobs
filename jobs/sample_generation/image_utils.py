@@ -91,7 +91,6 @@ def get_rand_string_image(rand_string):
         character_image = cv2.imread(f"{handwritten_dataset_processed_base_path}/{character_image_path}", flags=cv2.IMREAD_UNCHANGED)
         images_to_concat.append(character_image)
 
-
     images_to_concat_processed = preprocess_images_to_concat(images_to_concat, processing="scaling")
 
     return cv2.hconcat(images_to_concat_processed)
