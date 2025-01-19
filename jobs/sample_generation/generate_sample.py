@@ -69,24 +69,26 @@ def run_sampling(document_id, num_samples):
             pos_y_max = end_y-new_height
             pos_x_min = start_x
             pos_x_max = end_x-new_width
-            pos_x = int(random.choice(np.linspace(pos_x_min, pos_x_max, 10)))
-            pos_y = int(random.choice(np.linspace(pos_y_min, pos_y_max, 10)))
+            new_start_x = int(random.choice(np.linspace(pos_x_min, pos_x_max, 10)))
+            new_start_y = int(random.choice(np.linspace(pos_y_min, pos_y_max, 10)))
             document_with_strings = overlay_image(background=document_with_strings, overlay=rand_string_image_scaled, 
-                                                  position=(pos_x, pos_y))
+                                                  position=(new_start_x, new_start_y))
 
-            end_x = start_x + new_width
-            end_y = start_y + new_height
+            new_end_x = new_start_x + new_width
+            new_end_y = new_start_y + new_height
 
             # add buffer to boxes
             buffer = 1
-            start_x, start_y, end_x, end_y = start_x-buffer, start_y-buffer, end_x+buffer, end_y+buffer
+            start_x_buffer, start_y_buffer = new_start_x-buffer, new_start_y-buffer
+            end_x_buffer, end_y_buffer = new_end_x+buffer, new_end_y+buffer
 
             boxes_labels.append({"template_box_id": box["id"],
                                  "name": box["name"],
                                  "label": rand_string,
-                                 "coords": [[start_x, start_y], [end_x, start_y], [end_x, end_y], [start_x, end_y]]
+                                 "coords": [[start_x_buffer, start_y_buffer], [end_x_buffer, start_y_buffer], 
+                                            [end_x_buffer, end_y_buffer], [start_x_buffer, end_y_buffer]]
                                  })
-            
+                    
         # add degradations to the generated image
         degradations = [{"function": gaussian_blur, "parameters": {"kernel_size": np.arange(1, 5, 2)}}, 
                 {"function": motion_blur, "parameters": {"kernel_size": np.arange(1, 4, 1)}},

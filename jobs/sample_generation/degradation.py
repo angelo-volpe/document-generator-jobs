@@ -67,6 +67,7 @@ def wave_distortion(image, boxes_labels, amplitude, frequency):
         start_y = coords[0][1]
         end_y = coords[-1][1]
         
+        # find where will be located the original x coordinates in the distorted image
         new_start_x = np.where(np.ceil(X_distorted[start_y:end_y,:]) == start_x)[1].min()
         new_end_x = np.where(np.ceil(X_distorted[start_y:end_y,:]) == end_x)[1].max()
 
