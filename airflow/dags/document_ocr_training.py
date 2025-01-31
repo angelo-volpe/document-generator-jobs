@@ -32,12 +32,12 @@ with DAG(
         network_mode="host",
         mounts=[Mount(source="/Users/volpea/Documents/projects/document-generator-job/data", target="/app/data", type="bind")],
         mount_tmp_dir=False,
-        command="--job_name sampling" + " {{ '--document_id ' + dag_run.conf['document_id'] }}",
+        command="--job_name sample_preprocessing" + " {{ '--document_id ' + dag_run.conf['document_id'] }}",
     )
 
     training = DockerOperator(
         task_id="train_model",
-        image="paddle_ocr:latest",
+        image="paddle-ocr-document:latest",
         api_version="auto",
         auto_remove=True,
         docker_url="unix://var/run/docker.sock",
@@ -48,3 +48,5 @@ with DAG(
         mount_tmp_dir=False,
         command="./document_app/train_new_model.sh /data/fine_tuning_dataset {{ dag_run.conf['document_id'] }}",
     )
+
+    sample_preprocessing >> training
