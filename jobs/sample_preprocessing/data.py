@@ -5,7 +5,7 @@ from PIL import Image
 
 
 def get_sample_data(document_id: int):
-    get_samples_url = f"http://localhost:8000/document_generator/api/documents/{document_id}/get_samples/"
+    get_samples_url = f"http://localhost:8000/document_app/api/documents/{document_id}/get_samples/"
 
     with requests.Session() as session:
         res_samples = session.get(get_samples_url)
@@ -19,7 +19,7 @@ def get_sample_data(document_id: int):
 
     for sample in samples:
         sample_id = sample["id"]
-        get_sample_boxes_url = f"http://localhost:8000/document_generator/api/sample_documents/{sample_id}/get_boxes/"
+        get_sample_boxes_url = f"http://localhost:8000/document_app/api/sample_documents/{sample_id}/get_boxes/"
 
         with requests.Session() as session:
             res_boxes = session.get(get_sample_boxes_url)

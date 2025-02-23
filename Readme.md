@@ -36,8 +36,8 @@ docker run --rm \
 ```
 
 ### Start Airflow
-In airflow directory
 ```
-docker-compose up airflow-init
-docker-compose up
+cd airflow
+docker compose up airflow-init
+docker compose up
 ```

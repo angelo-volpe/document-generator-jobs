@@ -8,6 +8,7 @@ from tqdm import tqdm
 from .api_utils import get_image_and_boxes, publish_box_labels, publish_sample_image
 from .image_utils import get_rand_string_image, overlay_image, denormalise_box_coordinates, normalise_box_coordinates
 from .degradation import gaussian_blur, motion_blur, gaussian_noise, salt_pepper_noise, brightness_contrast, wave_distortion
+from ..logging_config import logger
 
 
 def generate_random_string(length, is_alphabetic, is_numeric):
@@ -23,6 +24,7 @@ def generate_random_string(length, is_alphabetic, is_numeric):
 
 
 def run_sampling(document_id, num_samples):
+    logger.info(f"Generating {num_samples} for document_id: {document_id}")
     sample_folder = Path(f"./data/sampling/document_{document_id}")
 
     sample_folder.mkdir(parents=True, exist_ok=True)
@@ -38,8 +40,10 @@ def run_sampling(document_id, num_samples):
 
         boxes_labels = []
         for box in boxes:
-            string_length = int(np.random.normal(box["mean_length"], 1))
+            string_length = int(max(np.random.normal(box["mean_length"], 1), 1))
+            logger.debug(f"random string parameters: length={string_length}, is_alphabetic={box['is_alphabetic']}, is_numeric={box['is_numeric']}")
             rand_string = generate_random_string(string_length, box["is_alphabetic"], box["is_numeric"])
+            logger.debug(f"Generated random string: {rand_string}")
 
             rand_string_image = get_rand_string_image(rand_string)
 

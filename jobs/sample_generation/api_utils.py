@@ -1,11 +1,11 @@
 import requests
-import logging
+from ..logging_config import logger
 
 
 def get_image_and_boxes(document_id: str):
     with requests.Session() as session:
-        res_document = session.get(f"http://localhost:8000/document_generator/api/documents/{document_id}")
-        res_boxes = session.get(f"http://localhost:8000/document_generator/api/documents/{document_id}/get_boxes/")
+        res_document = session.get(f"http://localhost:8000/document_app/api/documents/{document_id}")
+        res_boxes = session.get(f"http://localhost:8000/document_app/api/documents/{document_id}/get_boxes/")
     
         if res_document.status_code == 200 and res_boxes.status_code == 200:
             document_image_url = res_document.json()["image"]
@@ -23,7 +23,7 @@ def get_image_and_boxes(document_id: str):
 
 
 def publish_sample_image(image_path, sample_id, document_id):
-    url = "http://localhost:8000/document_generator/api/sample_documents/"
+    url = "http://localhost:8000/document_app/api/sample_documents/"
     files = {
         "image": open(image_path, "rb")
     }
@@ -36,13 +36,13 @@ def publish_sample_image(image_path, sample_id, document_id):
         response = session.post(url, files=files, data=data)
 
     if response.status_code != 201:
-        logging.error(f"unable to publish image: sample_{sample_id}, status: {response.status_code}")
+        logger.error(f"unable to publish image: sample_{sample_id}, status: {response.status_code}")
 
     return response.json()["id"]  
 
 
 def publish_box_labels(boxes_labels, sample_document_id):
-    url = "http://localhost:8000/document_generator/api/sample_boxes/create_sample_boxes/"
+    url = "http://localhost:8000/document_app/api/sample_boxes/create_sample_boxes/"
     data = {
         "sample_document_id": sample_document_id,
         "boxes": boxes_labels
@@ -52,4 +52,4 @@ def publish_box_labels(boxes_labels, sample_document_id):
         response = session.post(url, json=data)
 
     if response.status_code != 201:
-        logging.error(f"unable to publish box labels for sample_document_id: {sample_document_id}, status: {response.status_code}")
+        logger.error(f"unable to publish box labels for sample_document_id: {sample_document_id}, status: {response.status_code}")
