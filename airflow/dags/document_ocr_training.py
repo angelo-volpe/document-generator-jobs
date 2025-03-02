@@ -37,7 +37,7 @@ with DAG(
 
     training = DockerOperator(
         task_id="train_model",
-        image="paddle-ocr-document:latest",
+        image="paddle-ocr-document-training:latest",
         api_version="auto",
         auto_remove=True,
         docker_url="unix://var/run/docker.sock",
