@@ -7,7 +7,8 @@ from tqdm import tqdm
 
 from .api_utils import get_image_and_boxes, publish_box_labels, publish_sample_image
 from .image_utils import get_rand_string_image, overlay_image, denormalise_box_coordinates, normalise_box_coordinates
-from .degradation import gaussian_blur, motion_blur, gaussian_noise, salt_pepper_noise, brightness_contrast, wave_distortion
+from .image_degradations import gaussian_blur, motion_blur, gaussian_noise, salt_pepper_noise, brightness_contrast, wave_distortion
+from .letters_degradations import erode_letter_image, apply_gaussian_grayscale
 from ..logging_config import logger
 
 
@@ -41,6 +42,7 @@ def run_sampling(document_id, num_samples):
         boxes_labels = []
         for box in boxes:
             string_length = int(max(np.random.normal(box["mean_length"], 1), 1))
+            logger.debug(f"Box Name: {box['name']}")
             logger.debug(f"random string parameters: length={string_length}, is_alphabetic={box['is_alphabetic']}, is_numeric={box['is_numeric']}")
             rand_string = generate_random_string(string_length, box["is_alphabetic"], box["is_numeric"])
             logger.debug(f"Generated random string: {rand_string}")
@@ -62,12 +64,21 @@ def run_sampling(document_id, num_samples):
             scale = min(scale_w, scale_h)
             
             # Calculate new dimensions
-            random_scale = random.choice([0.7, 0.8, 0.9, 1])
+            random_scale = random.choice([0.6, 0.7, 0.8, 0.9, 1])
             new_width = int(string_width * scale * random_scale)
             new_height = int(string_height * scale * random_scale)
             
             # Resize the image to fit the box
             rand_string_image_scaled = cv2.resize(rand_string_image, (new_width, new_height), interpolation=cv2.INTER_AREA)
+
+            # Apply Degradations to the text image
+            erode_iterations = random.choice(np.linspace(0, 2, 3))
+            grayscale_mean = random.choice(np.linspace(0, 100, 101))
+            logger.debug(f"Applying erosion with {erode_iterations} iterations")
+            rand_string_image_scaled = erode_letter_image(rand_string_image_scaled, kernel_size=2, iterations=int(erode_iterations))
+
+            logger.debug(f"Applying grayscale with {grayscale_mean} mean")
+            rand_string_image_scaled = apply_gaussian_grayscale(rand_string_image_scaled, mean=int(grayscale_mean), std_dev=10)
 
             pos_y_min = start_y
             pos_y_max = end_y-new_height
@@ -117,15 +128,16 @@ def run_sampling(document_id, num_samples):
                                                            boxes_labels=boxes_labels)
             else:
                 degradated_image = degradation["function"](degradated_image, **params)
-
-        image_path = f"{sample_folder}/sample_{sample_id}.png"
-
-        # TODO use only for debugging
-        if cv2.imwrite(image_path, degradated_image):
-            pass
-        else:
-            raise ValueError("unable to save sample image")
         
+        if __debug__:
+            logger.debug(f"Saving sample image: sample_{sample_id}.png")
+            image_path = f"{sample_folder}/sample_{sample_id}.png"
+            if cv2.imwrite(image_path, degradated_image):
+                pass
+            else:
+                raise ValueError("unable to save sample image")
+        
+        logger.debug(f"Publishing sample {sample_id} image and boxes to the server")
         for box in boxes_labels:
             coords = box.pop("coords")
             
