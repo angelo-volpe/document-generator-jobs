@@ -36,7 +36,7 @@ def apply_gaussian_grayscale(img, mean=128, std_dev=30):
     Apply a Gaussian distribution to letter grayscale intensity on a white background.
     
     Parameters:
-    - image_path: Path to the input image
+    - img: image to apply the Gaussian distribution to
     - mean: Center of the Gaussian distribution (default 128 - middle gray)
     - std_dev: Standard deviation of the Gaussian distribution
     

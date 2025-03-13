@@ -1,6 +1,5 @@
 import cv2
 import numpy as np
-import math
 
 
 def gaussian_blur(image, kernel_size=1):

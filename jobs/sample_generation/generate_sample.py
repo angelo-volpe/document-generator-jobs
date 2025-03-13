@@ -106,14 +106,13 @@ def run_sampling(document_id, num_samples):
                     
         # add degradations to the generated image
         degradations = [{"function": gaussian_blur, "parameters": {"kernel_size": np.arange(1, 5, 2)}}, 
-                {"function": motion_blur, "parameters": {"kernel_size": np.arange(1, 4, 1)}},
-                {"function": gaussian_noise, "parameters": {"std": np.arange(0.5, 1, 0.1)}},
-                {"function": salt_pepper_noise, "parameters": {"prob": np.arange(0.001, 0.01, 0.001)}},
-                {"function": brightness_contrast, "parameters": {"alpha": np.arange(0.8, 1.2, 0.1), 
-                                                                 "beta": np.arange(-20, 20, 5)}},
-                {"function": wave_distortion, "parameters": {"amplitude": np.arange(1, 5, 1),
-                                                             "frequency": np.arange(0.001, 0.009, 0.001)}},
-                 ]
+                        {"function": motion_blur, "parameters": {"kernel_size": np.arange(1, 4, 1)}},
+                        {"function": gaussian_noise, "parameters": {"std": np.arange(0.5, 1, 0.1)}},
+                        {"function": salt_pepper_noise, "parameters": {"prob": np.arange(0.001, 0.01, 0.001)}},
+                        {"function": brightness_contrast, "parameters": {"alpha": np.arange(0.8, 1.2, 0.1), 
+                                                                         "beta": np.arange(-20, 20, 5)}},
+                        {"function": wave_distortion, "parameters": {"amplitude": np.arange(1, 5, 1),
+                                                                     "frequency": np.arange(0.001, 0.009, 0.001)}}]
 
         n = random.randint(0, len(degradations))
         random_degradations = random.sample(degradations, n)
