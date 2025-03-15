@@ -17,7 +17,7 @@ python main.py --job_name hw_preprocessing
 
 Run Sample Generation Job
 ```
-python main.py --job_name sampling --document_id 3 --num_samples 10
+python main.py --job_name sampling --document_id 3 --num_samples 10 --publish false
 ```
 
 Run Sample Preprocessing Job

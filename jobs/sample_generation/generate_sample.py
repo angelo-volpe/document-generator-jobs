@@ -7,7 +7,8 @@ from tqdm import tqdm
 
 from .api_utils import get_image_and_boxes, publish_box_labels, publish_sample_image
 from .image_utils import get_rand_string_image, overlay_image, denormalise_box_coordinates, normalise_box_coordinates
-from .image_degradations import gaussian_blur, motion_blur, gaussian_noise, salt_pepper_noise, brightness_contrast, wave_distortion
+from .image_degradations import gaussian_blur, motion_blur, gaussian_noise, \
+    salt_pepper_noise, brightness_contrast, wave_distortion, add_shadow, apply_color_filter
 from .letters_degradations import erode_letter_image, apply_gaussian_grayscale
 from ..logging_config import logger
 
@@ -24,7 +25,7 @@ def generate_random_string(length, is_alphabetic, is_numeric):
     return "".join(random.choices(characters, k=length))
 
 
-def run_sampling(document_id, num_samples):
+def run_sampling(document_id: int, num_samples: int, publish: bool = False):
     logger.info(f"Generating {num_samples} for document_id: {document_id}")
     sample_folder = Path(f"./data/sampling/document_{document_id}")
 
@@ -112,7 +113,15 @@ def run_sampling(document_id, num_samples):
                         {"function": brightness_contrast, "parameters": {"alpha": np.arange(0.8, 1.2, 0.1), 
                                                                          "beta": np.arange(-20, 20, 5)}},
                         {"function": wave_distortion, "parameters": {"amplitude": np.arange(1, 5, 1),
-                                                                     "frequency": np.arange(0.001, 0.009, 0.001)}}]
+                                                                     "frequency": np.arange(0.001, 0.009, 0.001)}},
+                        {"function": add_shadow, "parameters": {"direction": ["diagonal", "left", "right", "top", "bottom"],
+                                                                "intensity": np.arange(0.1, 0.8, 0.1),
+                                                                "blur": np.arange(50, 300, 50),
+                                                                "len_percentage": np.arange(0.1, 0.9, 0.1)}},
+                        {"function": apply_color_filter, "parameters": {"red": np.arange(0.9, 1.1, 0.01),
+                                                                        "green": np.arange(0.9, 1.1, 0.01),
+                                                                        "blue": np.arange(0.9, 1.1, 0.01)}}
+                        ]
 
         n = random.randint(0, len(degradations))
         random_degradations = random.sample(degradations, n)
@@ -121,6 +130,8 @@ def run_sampling(document_id, num_samples):
 
         for degradation in random_degradations:
             params = {k: random.choice(v) for k, v in degradation["parameters"].items()}
+
+            logger.debug(f"Applying degradation: {degradation['function'].__name__}, with parameters: {params}")
 
             if degradation["function"].__name__ == "wave_distortion":
                 degradated_image = degradation["function"](degradated_image, **params, 
@@ -136,23 +147,25 @@ def run_sampling(document_id, num_samples):
             else:
                 raise ValueError("unable to save sample image")
         
-        logger.debug(f"Publishing sample {sample_id} image and boxes to the server")
-        for box in boxes_labels:
-            coords = box.pop("coords")
-            
-            start_x = coords[0][0]
-            end_x = coords[1][0]
-            start_y = coords[0][1]
-            end_y = coords[-1][1]
+        if publish:
+            logger.debug(f"Publishing sample {sample_id} image and boxes to the server")
+            for box in boxes_labels:
+                coords = box.pop("coords")
+                
+                start_x = coords[0][0]
+                end_x = coords[1][0]
+                start_y = coords[0][1]
+                end_y = coords[-1][1]
 
-            # normalise the box coordinates
-            start_x_norm, start_y_norm, end_x_norm, end_y_norm = normalise_box_coordinates(start_x, start_y, end_x, end_y,
-                                                                                           doc_width, doc_height)
+                # normalise the box coordinates
+                start_x_norm, start_y_norm, end_x_norm, end_y_norm = normalise_box_coordinates(start_x, start_y, end_x, end_y,
+                                                                                            doc_width, doc_height)
+                
+                box["start_x_norm"] = start_x_norm
+                box["start_y_norm"] = start_y_norm
+                box["end_x_norm"] = end_x_norm
+                box["end_y_norm"] = end_y_norm
             
-            box["start_x_norm"] = start_x_norm
-            box["start_y_norm"] = start_y_norm
-            box["end_x_norm"] = end_x_norm
-            box["end_y_norm"] = end_y_norm
         
-        sample_document_id = publish_sample_image(image_path, sample_id, document_id)
-        publish_box_labels(boxes_labels, sample_document_id)
+            sample_document_id = publish_sample_image(image_path, sample_id, document_id)
+            publish_box_labels(boxes_labels, sample_document_id)

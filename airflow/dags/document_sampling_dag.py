@@ -32,5 +32,5 @@ with DAG(
         network_mode="host",
         mounts=[Mount(source="/Users/volpea/Documents/projects/document-generator-job/data", target="/app/data", type="bind")],
         mount_tmp_dir=False,
-        command="--job_name sampling" + " {{ '--document_id ' + dag_run.conf['document_id'] + ' --num_samples ' + dag_run.conf['num_samples'] }}",
+        command="--job_name sampling" + " {{ '--document_id ' + dag_run.conf['document_id'] + ' --num_samples ' + dag_run.conf['num_samples']  + ' --publish true'}}",
     )
