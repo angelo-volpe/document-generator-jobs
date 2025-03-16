@@ -2,12 +2,12 @@ import cv2
 import numpy as np
 
 
-def erode_letter_image(img, kernel_size=3, iterations=1):
+def erode_letter_image(img: np.array, kernel_size: int = 3, iterations: int = 1):
     """
     Apply erosion to an image and invert colors.
     
     Parameters:
-    - image_path: Path to the input image
+    - img: input image
     - kernel_size: Size of the erosion kernel (default is 3x3)
     
     Returns:
@@ -31,7 +31,7 @@ def erode_letter_image(img, kernel_size=3, iterations=1):
     return inverted_eroded_img
 
 
-def apply_gaussian_grayscale(img, mean=128, std_dev=30):
+def apply_gaussian_grayscale(img: np.array, mean: int = 128, std_dev: int = 30):
     """
     Apply a Gaussian distribution to letter grayscale intensity on a white background.
     
@@ -44,6 +44,13 @@ def apply_gaussian_grayscale(img, mean=128, std_dev=30):
     - Original binary image
     - Gaussian-distributed grayscale image
     """
+    alpha = None
+    
+    # handle alpha channel
+    if img.shape[2] == 4:
+        alpha = img[:, :, 3]
+        img = img[:, :, :3]
+        
     # Create a binary threshold to ensure white background, black letter
     _, binary_img = cv2.threshold(img, 127, 255, cv2.THRESH_BINARY)
     
@@ -68,4 +75,8 @@ def apply_gaussian_grayscale(img, mean=128, std_dev=30):
         # Clip values to valid grayscale range
         gaussian_img = np.clip(gaussian_img, 0, 255).astype(np.uint8)
 
+    if alpha is not None:
+        alpha = alpha.reshape((*alpha.shape, 1))
+        gaussian_img = np.concatenate((gaussian_img, alpha), axis=2)
+    
     return gaussian_img

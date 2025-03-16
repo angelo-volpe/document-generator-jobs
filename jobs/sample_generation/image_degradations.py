@@ -171,12 +171,10 @@ def apply_color_filter(img: np.array, red: float = 1.0, green: float = 1.0, blue
     def apply_filter(p, factor):
         return min(255, int(factor * p))
 
-    filtered_image = img.copy()
-
     apply_filter_vec = np.vectorize(apply_filter)
 
-    filtered_image[:, :, 0] = apply_filter_vec(filtered_image[:, :, 0], blue)
-    filtered_image[:, :, 1] = apply_filter_vec(filtered_image[:, :, 1], green)
-    filtered_image[:, :, 2] = apply_filter_vec(filtered_image[:, :, 2], red)
+    img[:, :, 0] = apply_filter_vec(img[:, :, 0], blue)
+    img[:, :, 1] = apply_filter_vec(img[:, :, 1], green)
+    img[:, :, 2] = apply_filter_vec(img[:, :, 2], red)
 
-    return filtered_image
+    return img

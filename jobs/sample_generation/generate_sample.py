@@ -28,8 +28,10 @@ def generate_random_string(length, is_alphabetic, is_numeric):
 def run_sampling(document_id: int, num_samples: int, publish: bool = False):
     logger.info(f"Generating {num_samples} for document_id: {document_id}")
     sample_folder = Path(f"./data/sampling/document_{document_id}")
+    label_folder = Path(f"./data/labels/document_{document_id}")
 
     sample_folder.mkdir(parents=True, exist_ok=True)
+    label_folder.mkdir(parents=True, exist_ok=True)
 
     document_image_buffer, boxes = get_image_and_boxes(document_id=document_id)
     document_image = cv2.imdecode(np.frombuffer(document_image_buffer, dtype=np.uint8), 
@@ -39,6 +41,7 @@ def run_sampling(document_id: int, num_samples: int, publish: bool = False):
 
     for sample_id in tqdm(range(num_samples)):
         document_with_strings = document_image.copy()
+        black_document_with_strings = np.full_like(document_image, 255)
 
         boxes_labels = []
         for box in boxes:
@@ -89,6 +92,9 @@ def run_sampling(document_id: int, num_samples: int, publish: bool = False):
             new_start_y = int(random.choice(np.linspace(pos_y_min, pos_y_max, 10)))
             document_with_strings = overlay_image(background=document_with_strings, overlay=rand_string_image_scaled, 
                                                   position=(new_start_x, new_start_y))
+            
+            black_document_with_strings = overlay_image(background=black_document_with_strings, overlay=rand_string_image_scaled, 
+                                                        position=(new_start_x, new_start_y))
 
             new_end_x = new_start_x + new_width
             new_end_y = new_start_y + new_height
@@ -146,6 +152,12 @@ def run_sampling(document_id: int, num_samples: int, publish: bool = False):
                 pass
             else:
                 raise ValueError("unable to save sample image")
+            
+            labels_path = f"{label_folder}/text_only_{sample_id}.png"
+            if cv2.imwrite(labels_path, black_document_with_strings):
+                pass
+            else:  
+                raise ValueError("unable to save text only image")
         
         if publish:
             logger.debug(f"Publishing sample {sample_id} image and boxes to the server")
