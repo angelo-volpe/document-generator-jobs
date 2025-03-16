@@ -10,7 +10,7 @@ if __name__ == "__main__":
     parser.add_argument('--job_name', type=str, help='must be one of: "hw_preprocessing", "sampling", "sample_preprocessing"', required=True)
     parser.add_argument('--document_id', type=int, required=False)
     parser.add_argument('--num_samples', type=int, required=False)
-    parser.add_argument('--publish', type=bool, required=False, default=False)
+    parser.add_argument('--publish', action="store_true")
 
     args = parser.parse_args()
 
