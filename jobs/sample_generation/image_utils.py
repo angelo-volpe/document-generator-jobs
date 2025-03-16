@@ -1,7 +1,7 @@
 import numpy as np
 import cv2
 import pandas as pd
-
+import random
 
 def overlay_image(background, overlay, position):
     """
@@ -89,6 +89,13 @@ def get_rand_string_image(rand_string):
         character_image_path = labels[labels["label"] == character].sample(n=1)["image"].iloc[0]
     
         character_image = cv2.imread(f"{handwritten_dataset_processed_base_path}/{character_image_path}", flags=cv2.IMREAD_UNCHANGED)
+
+        # apply random small padding to the characters to make it more natural written
+        if random.choice([True, False]):
+            pad_size = int(random.choice(np.linspace(0, 70, 71)))
+            pad = np.full((character_image.shape[0], pad_size, 4), np.array([255, 255, 255,   0]), dtype=np.uint8)
+            character_image = cv2.hconcat([character_image, pad])
+
         images_to_concat.append(character_image)
 
     images_to_concat_processed = preprocess_images_to_concat(images_to_concat, processing="scaling")

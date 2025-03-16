@@ -27,6 +27,11 @@ def erode_letter_image(img: np.array, kernel_size: int = 3, iterations: int = 1)
     
     # Invert the eroded image (now white background, black letter)
     inverted_eroded_img = cv2.bitwise_not(eroded_img)
+
+    # Apply alpha channel to the eroded part
+    if img.shape[2] == 4:
+        white_area = np.all(inverted_eroded_img[:, :, :3] == [255, 255, 255], axis=-1)
+        inverted_eroded_img[white_area, -1] = 0
     
     return inverted_eroded_img
 

@@ -27,6 +27,7 @@ def generate_random_string(length, is_alphabetic, is_numeric):
 
 def run_sampling(document_id: int, num_samples: int, publish: bool = False):
     logger.info(f"Generating {num_samples} for document_id: {document_id}")
+    logger.info(f"Publishing to the server: {publish}")
     sample_folder = Path(f"./data/sampling/document_{document_id}")
     label_folder = Path(f"./data/labels/document_{document_id}")
 
@@ -39,10 +40,12 @@ def run_sampling(document_id: int, num_samples: int, publish: bool = False):
     doc_height = document_image.shape[0]
     doc_width = document_image.shape[1]
 
+    # Generate samples
     for sample_id in tqdm(range(num_samples)):
         document_with_strings = document_image.copy()
         black_document_with_strings = np.full_like(document_image, 255)
 
+        # Generate random strings for each box and overlay them on the document
         boxes_labels = []
         for box in boxes:
             string_length = int(max(np.random.normal(box["mean_length"], 1), 1))
@@ -52,6 +55,17 @@ def run_sampling(document_id: int, num_samples: int, publish: bool = False):
             logger.debug(f"Generated random string: {rand_string}")
 
             rand_string_image = get_rand_string_image(rand_string)
+
+            # Apply Degradations to the text image
+            if random.choice([True, False]):
+                erode_iterations = random.choice(np.linspace(0, 9, 10))
+                logger.debug(f"Applying erosion with {erode_iterations} iterations")
+                rand_string_image = erode_letter_image(rand_string_image, kernel_size=3, iterations=int(erode_iterations))
+
+            if random.choice([True, False]):
+                grayscale_mean = random.choice(np.linspace(0, 100, 101))
+                logger.debug(f"Applying grayscale with {grayscale_mean} mean")
+                rand_string_image = apply_gaussian_grayscale(rand_string_image, mean=int(grayscale_mean), std_dev=10)
 
             start_x, start_y, end_x, end_y = denormalise_box_coordinates(box["start_x_norm"], box["start_y_norm"], 
                                                                         box["end_x_norm"], box["end_y_norm"],
@@ -68,21 +82,13 @@ def run_sampling(document_id: int, num_samples: int, publish: bool = False):
             scale = min(scale_w, scale_h)
             
             # Calculate new dimensions
-            random_scale = random.choice([0.6, 0.7, 0.8, 0.9, 1])
+            random_scale = random.choice([0.5, 0.6, 0.7, 0.8, 0.9, 1])
+            logger.debug(f"Applying random_scale: {random_scale}")
             new_width = int(string_width * scale * random_scale)
             new_height = int(string_height * scale * random_scale)
             
             # Resize the image to fit the box
             rand_string_image_scaled = cv2.resize(rand_string_image, (new_width, new_height), interpolation=cv2.INTER_AREA)
-
-            # Apply Degradations to the text image
-            erode_iterations = random.choice(np.linspace(0, 2, 3))
-            grayscale_mean = random.choice(np.linspace(0, 100, 101))
-            logger.debug(f"Applying erosion with {erode_iterations} iterations")
-            rand_string_image_scaled = erode_letter_image(rand_string_image_scaled, kernel_size=2, iterations=int(erode_iterations))
-
-            logger.debug(f"Applying grayscale with {grayscale_mean} mean")
-            rand_string_image_scaled = apply_gaussian_grayscale(rand_string_image_scaled, mean=int(grayscale_mean), std_dev=10)
 
             pos_y_min = start_y
             pos_y_max = end_y-new_height
@@ -121,7 +127,7 @@ def run_sampling(document_id: int, num_samples: int, publish: bool = False):
                         {"function": wave_distortion, "parameters": {"amplitude": np.arange(1, 5, 1),
                                                                      "frequency": np.arange(0.001, 0.009, 0.001)}},
                         {"function": add_shadow, "parameters": {"direction": ["diagonal", "left", "right", "top", "bottom"],
-                                                                "intensity": np.arange(0.1, 0.8, 0.1),
+                                                                "intensity": np.arange(0.1, 0.7, 0.1),
                                                                 "blur": np.arange(50, 300, 50),
                                                                 "len_percentage": np.arange(0.1, 0.9, 0.1)}},
                         {"function": apply_color_filter, "parameters": {"red": np.arange(0.9, 1.1, 0.01),
@@ -145,6 +151,7 @@ def run_sampling(document_id: int, num_samples: int, publish: bool = False):
             else:
                 degradated_image = degradation["function"](degradated_image, **params)
         
+        # save generated samples for debug
         if __debug__:
             logger.debug(f"Saving sample image: sample_{sample_id}.png")
             image_path = f"{sample_folder}/sample_{sample_id}.png"
@@ -159,6 +166,7 @@ def run_sampling(document_id: int, num_samples: int, publish: bool = False):
             else:  
                 raise ValueError("unable to save text only image")
         
+        # publish to the server
         if publish:
             logger.debug(f"Publishing sample {sample_id} image and boxes to the server")
             for box in boxes_labels:
