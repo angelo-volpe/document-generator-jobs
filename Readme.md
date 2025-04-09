@@ -1,5 +1,6 @@
 ### Dataset Source
-https://www.kaggle.com/datasets/dhruvildave/english-handwritten-characters-dataset
+
+EMNIST Dataset: https://www.nist.gov/itl/products-and-services/emnist-dataset
 
 ### Jobs
 - <b>Handwritten Dataset Preprocessing</b>: read all images from handwritten dataset and preprocess them(adding alpha, crop to content)
@@ -12,7 +13,7 @@ https://www.kaggle.com/datasets/dhruvildave/english-handwritten-characters-datas
 
 Run Handwritten Dataset Preprocessing Job
 ```
-python main.py --job_name hw_preprocessing
+python main.py --job_name hw_preprocessing_emnist
 ```
 
 Run Sample Generation Job

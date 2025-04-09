@@ -1,5 +1,7 @@
 import requests
+
 from ..logging_config import logger
+from .models import Box
 
 
 def get_image_and_boxes(document_id: str):
@@ -9,7 +11,8 @@ def get_image_and_boxes(document_id: str):
     
         if res_document.status_code == 200 and res_boxes.status_code == 200:
             document_image_url = res_document.json()["image"]
-            boxes = res_boxes.json()
+            boxes_json = res_boxes.json()
+            boxes = list(map(lambda box_dict: Box(**box_dict), boxes_json))
             res_image = session.get(document_image_url)
     
             if res_image.status_code == 200:

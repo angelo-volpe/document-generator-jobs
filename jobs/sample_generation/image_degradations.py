@@ -3,6 +3,8 @@ from PIL import Image, ImageFilter
 import numpy as np
 import random
 
+from ..logging_config import logger
+
 
 def gaussian_blur(image, kernel_size=1):
     gaussian_blur = cv2.GaussianBlur(image, (kernel_size, kernel_size), 0)
@@ -72,8 +74,8 @@ def wave_distortion(image, boxes_labels, amplitude, frequency):
         new_start_x = np.where(np.ceil(X_distorted[start_y:end_y,:]) == start_x)[1].min()
         new_end_x = np.where(np.ceil(X_distorted[start_y:end_y,:]) == end_x)[1].max()
 
-        box["coords"] = [[new_start_x, start_y], [new_end_x, start_y], 
-                         [new_end_x, end_y], [new_start_x, end_y]]
+        box["coords"] = [[int(new_start_x), int(start_y)], [int(new_end_x), int(start_y)], 
+                         [int(new_end_x), int(end_y)], [int(new_start_x), int(end_y)]]
         
     distorted_image = cv2.remap(image, X_distorted, Y_distorted, interpolation=cv2.INTER_LINEAR)
 
@@ -154,6 +156,10 @@ def add_shadow(img: np.array,
     
     return result
 
+def apply_filter(p, factor):
+        return min(255, int(factor * p))
+
+apply_filter_vec = np.vectorize(apply_filter)
 
 def apply_color_filter(img: np.array, red: float = 1.0, green: float = 1.0, blue: float = 1.0):
     """
@@ -168,13 +174,46 @@ def apply_color_filter(img: np.array, red: float = 1.0, green: float = 1.0, blue
     Returns:
     - np.array of the filtered image
     """
-    def apply_filter(p, factor):
-        return min(255, int(factor * p))
-
-    apply_filter_vec = np.vectorize(apply_filter)
-
-    img[:, :, 0] = apply_filter_vec(img[:, :, 0], blue)
-    img[:, :, 1] = apply_filter_vec(img[:, :, 1], green)
-    img[:, :, 2] = apply_filter_vec(img[:, :, 2], red)
+    for i, color in enumerate([red, green, blue]):
+        if color != 1:
+            img[:, :, i] = apply_filter_vec(img[:, :, i], color)
 
     return img
+
+
+def apply_degradations(image: np.array, boxes_labels: list):
+    # add degradations to the generated image
+    degradations = [{"function": gaussian_blur, "parameters": {"kernel_size": np.arange(1, 5, 2)}}, 
+                    {"function": motion_blur, "parameters": {"kernel_size": np.arange(1, 4, 1)}},
+                    {"function": gaussian_noise, "parameters": {"std": np.arange(0.5, 1, 0.1)}},
+                    {"function": salt_pepper_noise, "parameters": {"prob": np.arange(0.001, 0.01, 0.001)}},
+                    {"function": brightness_contrast, "parameters": {"alpha": np.arange(0.8, 1.2, 0.1), 
+                                                                        "beta": np.arange(-20, 20, 5)}},
+                    {"function": wave_distortion, "parameters": {"amplitude": np.arange(1, 5, 1),
+                                                                    "frequency": np.arange(0.001, 0.009, 0.001)}},
+                    {"function": add_shadow, "parameters": {"direction": ["diagonal", "left", "right", "top", "bottom"],
+                                                            "intensity": np.arange(0.1, 0.6, 0.1),
+                                                            "blur": np.arange(50, 300, 50),
+                                                            "len_percentage": np.arange(0.1, 0.9, 0.1)}},
+                    {"function": apply_color_filter, "parameters": {"red": np.arange(0.9, 1.1, 0.01),
+                                                                    "green": np.arange(0.9, 1.1, 0.01),
+                                                                    "blue": np.arange(0.9, 1.1, 0.01)}}
+                    ]
+
+    n = random.randint(0, len(degradations))
+    random_degradations = random.sample(degradations, n)
+
+    degradated_image = image
+
+    for degradation in random_degradations:
+        params = {k: random.choice(v) for k, v in degradation["parameters"].items()}
+
+        logger.debug(f"Applying degradation: {degradation['function'].__name__}, with parameters: {params}")
+
+        if degradation["function"].__name__ == "wave_distortion":
+            degradated_image = degradation["function"](degradated_image, **params, 
+                                                       boxes_labels=boxes_labels)
+        else:
+            degradated_image = degradation["function"](degradated_image, **params)
+
+    return degradated_image

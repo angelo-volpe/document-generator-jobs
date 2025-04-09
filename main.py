@@ -1,6 +1,9 @@
 import argparse
 import logging
+import datetime
+
 from jobs.handwritten_dataset_preprocessing.preprocessing import run_hw_preprocessing
+from jobs.handwritten_dataset_preprocessing_emnist.preprocessing import run_hw_preprocessing_emnist
 from jobs.sample_generation.generate_sample import run_sampling
 from jobs.sample_preprocessing.preprocessing import run_sample_preprocessing
 
@@ -16,8 +19,16 @@ if __name__ == "__main__":
 
     if args.job_name == "hw_preprocessing":
         run_hw_preprocessing()
+    elif args.job_name == "hw_preprocessing_emnist":
+        run_hw_preprocessing_emnist(dataset_type="train")
+        run_hw_preprocessing_emnist(dataset_type="test")
     elif args.job_name == "sampling":
-        run_sampling(document_id=args.document_id, num_samples=args.num_samples, publish=args.publish)
+        num_samples_train = int(args.num_samples * 0.8)
+        num_samples_test = args.num_samples - num_samples_train
+        version = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+
+        run_sampling(document_id=args.document_id, num_samples=num_samples_train, version=version, publish=args.publish, dataset_type="train")
+        run_sampling(document_id=args.document_id, num_samples=num_samples_test, version=version, publish=args.publish, dataset_type="test")
     elif args.job_name == "sample_preprocessing":
         run_sample_preprocessing(document_id=args.document_id)
     else:
