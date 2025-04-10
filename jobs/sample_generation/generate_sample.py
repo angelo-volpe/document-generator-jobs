@@ -45,6 +45,7 @@ def run_sampling(document_id: int, num_samples: int, version: str, publish: bool
                                          flags=cv2.IMREAD_UNCHANGED)
 
     # Generate samples
+    labels = {}
     for sample_id in tqdm(range(num_samples)):
         document_with_strings = document_image.copy()
         blank_with_strings = np.full_like(document_with_strings, 255)
@@ -71,30 +72,33 @@ def run_sampling(document_id: int, num_samples: int, version: str, publish: bool
                 rand_string_image = apply_gaussian_grayscale(rand_string_image, mean=int(grayscale_mean), std_dev=10)
 
             document_with_strings, blank_with_strings, box_label = add_string_image_to_document(document_image=document_with_strings,
-                                                                                                         blank_document=blank_with_strings,
-                                                                                                         box=box, 
-                                                                                                         rand_string=rand_string,
-                                                                                                         rand_string_image=rand_string_image)
+                                                                                                blank_document=blank_with_strings,
+                                                                                                box=box, 
+                                                                                                rand_string=rand_string,
+                                                                                                rand_string_image=rand_string_image)
             boxes_labels.append(box_label)
 
         degradated_image = apply_degradations(document_with_strings, boxes_labels)
         
         # Save the sample image and labels
-        logger.debug(f"Saving sample image: sample_{sample_id}.png")
-        image_path= sample_folder / f"sample_{sample_id}.png"
+        sample_filename = f"sample_{sample_id}.png"
+        logger.debug(f"Saving sample image: {sample_filename}")
+        image_path= sample_folder / sample_filename
         if cv2.imwrite(image_path, degradated_image):
             pass
         else:
             raise ValueError("unable to save sample image")
         
-        label_path = label_folder / f"sample_{sample_id}.png"
+        label_path = label_folder / sample_filename
         if cv2.imwrite(label_path, blank_with_strings):
             pass
         else:  
             raise ValueError("unable to save text only image")
         
-        # Save Annotations
-        annotations = get_annotations(boxes_labels, f"sample_{sample_id}.png")
+        labels.update({sample_filename: boxes_labels})
+        
+        # Save Annotations in PaddleOCR format, TODO PaddleOCR should be responsible for this, converting from json to paddleocr format
+        annotations = get_annotations(boxes_labels, sample_filename)
         with open(sample_folder.parent / f"{dataset_type}_labels.txt", "a") as file:
             file.write(annotations + "\n")
         
@@ -122,3 +126,8 @@ def run_sampling(document_id: int, num_samples: int, version: str, publish: bool
             
             sample_document_id = publish_sample_image(image_path, sample_id, document_id)
             publish_box_labels(boxes_labels, sample_document_id)
+
+    with open(sample_folder.parent / f"{dataset_type}_labels.json", "a") as labels_file:
+        # Save the boxes labels in JSON format
+        logger.debug(f"Saving sample labels: {sample_filename}")
+        json.dump(labels, labels_file)
