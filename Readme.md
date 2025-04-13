@@ -4,8 +4,7 @@ EMNIST Dataset: https://www.nist.gov/itl/products-and-services/emnist-dataset
 
 ### Jobs
 - <b>Handwritten Dataset Preprocessing</b>: read all images from handwritten dataset and preprocess them(adding alpha, crop to content)
-- <b>Sample Generation</b>: read the document and the handwritten dataset and generate the sample
-
+- <b>Sample Generation</b>: read the document and the handwritten dataset and generate the sample. [Job Details](./jobs/sample_generation/README.md)
 
 ### How to run jobs
 

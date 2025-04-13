@@ -5,8 +5,8 @@ import random
 import os
 from pathlib import Path
 
-from ..logging_config import logger
-from .models import Box
+from jobs.logging_config import logger
+from jobs.sample_generation.models import Box
 
 
 def overlay_image(background, overlay, position):
@@ -208,3 +208,16 @@ def add_string_image_to_document(document_image: np.array,
                             [int(end_x_buffer), int(end_y_buffer)], [int(start_x_buffer), int(end_y_buffer)]]}
 
     return document_with_strings, blank_document_with_strings, box_label
+
+
+def draw_boxes(image: np.array, boxes_coords: list):
+    image = image.copy()
+    for coords in boxes_coords:
+        start_x = coords[0][0]
+        start_y = coords[0][1]
+        end_x = coords[1][0]
+        end_y = coords[2][1]
+
+        cv2.rectangle(image, (start_x, start_y), (end_x, end_y), (255, 0, 0), 2)
+    
+    return image

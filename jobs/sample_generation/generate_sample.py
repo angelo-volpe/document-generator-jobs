@@ -8,8 +8,10 @@ import json
 
 from .api_utils import get_image_and_boxes, publish_box_labels, publish_sample_image
 from .image_utils import get_rand_string_image_emnist, add_string_image_to_document, normalise_box_coordinates
-from .image_degradations import apply_degradations
-from .letters_degradations import erode_letter_image, apply_gaussian_grayscale
+from .image_degradations import DegradationsConfig, ImageDegradator, GaussianBlurDegradation, \
+    MotionBlurDegradation, GaussianNoiseDegradation, SaltPepperNoiseDegradation, BrightnessContrastDegradation, \
+    WaveDistortionDegradation, ShadowDegradation, ColorFilterDegradation
+from .letters_degradations import apply_gaussian_grayscale
 from ..logging_config import logger
 
 
@@ -46,6 +48,10 @@ def run_sampling(document_id: int, num_samples: int, version: str, publish: bool
 
     # Generate samples
     labels = {}
+    degradations_list = [GaussianBlurDegradation, MotionBlurDegradation, GaussianNoiseDegradation, SaltPepperNoiseDegradation, 
+                         BrightnessContrastDegradation, WaveDistortionDegradation, ShadowDegradation, ColorFilterDegradation]
+    
+    degradations_config = DegradationsConfig(config_path="./jobs/sample_generation/config/degradation_config.yaml")
     for sample_id in tqdm(range(num_samples)):
         document_with_strings = document_image.copy()
         blank_with_strings = np.full_like(document_with_strings, 255)
@@ -77,8 +83,14 @@ def run_sampling(document_id: int, num_samples: int, version: str, publish: bool
                                                                                                 rand_string=rand_string,
                                                                                                 rand_string_image=rand_string_image)
             boxes_labels.append(box_label)
+        # Apply Degradations to the document image
+        n_degradations = random.randint(0, len(degradations_list))
+        random_degradations = random.sample(degradations_list, n_degradations)
 
-        degradated_image = apply_degradations(document_with_strings, boxes_labels)
+        image_degradator = ImageDegradator(image=document_with_strings, boxes_labels=boxes_labels, 
+                                           degradations_list=random_degradations, degradations_config=degradations_config)
+
+        degradated_image, boxes_labels = image_degradator.apply_degradations()
         
         # Save the sample image and labels
         sample_filename = f"sample_{sample_id}.png"
