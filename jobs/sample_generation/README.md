@@ -1,5 +1,5 @@
-## Sample Generarion Job
-This job aims to generate samples of sysnthetic data based on template document and bounding boxes. The template document will be filled with handwritten text using bounding boxes information.
+## Sample Generation Job
+This job aims to generate samples of synthetic data based on template document and bounding boxes. The template document will be filled with handwritten text using bounding boxes information.
 The generated data is versioned and subdivided into train and test datasets.
 
 ### Jobs Input
