@@ -12,7 +12,7 @@ def run_sample_preprocessing(document_id: int):
 
     logger.info("Preprocess sample")
     images = get_annotations(images, box_labels)
-    
+
     logger.info("Train Validation split")
     train_test_split(document_id, images, split_percentage=0.9)
 

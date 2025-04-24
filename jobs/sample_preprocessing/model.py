@@ -6,14 +6,21 @@ from tqdm import tqdm
 from ..logging_config import logger
 
 
-def denormalise_box_coordinates(start_x_norm: float, start_y_norm: float, end_x_norm: float, end_y_norm: float, 
-                                doc_width: int, doc_height: int):
+def denormalise_box_coordinates(
+    start_x_norm: float,
+    start_y_norm: float,
+    end_x_norm: float,
+    end_y_norm: float,
+    doc_width: int,
+    doc_height: int,
+):
     start_x = int(start_x_norm * doc_width)
     end_x = int(end_x_norm * doc_width)
     start_y = int(start_y_norm * doc_height)
     end_y = int(end_y_norm * doc_height)
-    
+
     return start_x, start_y, end_x, end_y
+
 
 def get_box_coords(start_x, start_y, end_x, end_y):
     return [[start_x, start_y], [end_x, start_y], [end_x, end_y], [start_x, end_y]]
@@ -26,12 +33,22 @@ def get_annotations(images, box_labels):
 
     for sample in images:
         sample_labels = box_labels[box_labels["sample_document"] == sample["sample_id"]]
-        boxes_annotation = sample_labels.apply(lambda x: 
-                                            {"transcription": x["label"], 
-                                             "points": get_box_coords(*denormalise_box_coordinates(x["start_x_norm"], x["start_y_norm"], 
-                                                                                                   x["end_x_norm"], x["end_y_norm"], 
-                                                                                                   image_width, image_height))}
-                        , axis=1).values
+        boxes_annotation = sample_labels.apply(
+            lambda x: {
+                "transcription": x["label"],
+                "points": get_box_coords(
+                    *denormalise_box_coordinates(
+                        x["start_x_norm"],
+                        x["start_y_norm"],
+                        x["end_x_norm"],
+                        x["end_y_norm"],
+                        image_width,
+                        image_height,
+                    )
+                ),
+            },
+            axis=1,
+        ).values
 
         sample["annotations"] = json.dumps(list(boxes_annotation))
 
@@ -40,13 +57,18 @@ def get_annotations(images, box_labels):
 
 def train_test_split(document_id: int, images, split_percentage=0.9):
     num_samples = len(images)
-    fine_tuning_dataset_path = Path(os.environ.get("FINE_TUNING_DATASET_PATH", "./data/fine_tuning_dataset/")) / f"document_{document_id}/"
+    fine_tuning_dataset_path = (
+        Path(os.environ.get("FINE_TUNING_DATASET_PATH", "./data/fine_tuning_dataset/"))
+        / f"document_{document_id}/"
+    )
 
     split = int(num_samples * split_percentage)
     train_samples = images[:split]
     val_samples = images[split:]
 
-    logger.info(f"Training samples: {len(train_samples)}, Validation samples: {len(val_samples)}")
+    logger.info(
+        f"Training samples: {len(train_samples)}, Validation samples: {len(val_samples)}"
+    )
 
     logger.info(f"Writing train samples")
     train_annotations = []
@@ -71,8 +93,8 @@ def train_test_split(document_id: int, images, split_percentage=0.9):
         val_annotations.append(val_annotation)
 
     logger.info(f"Writing labels")
-    with open(fine_tuning_dataset_path / 'train_labels.txt', "w") as file:
+    with open(fine_tuning_dataset_path / "train_labels.txt", "w") as file:
         file.write("\n".join(train_annotations))
 
-    with open(fine_tuning_dataset_path / 'val_labels.txt', "w") as file:
+    with open(fine_tuning_dataset_path / "val_labels.txt", "w") as file:
         file.write("\n".join(val_annotations))

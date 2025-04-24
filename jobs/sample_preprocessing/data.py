@@ -5,7 +5,9 @@ from PIL import Image
 
 
 def get_sample_data(document_id: int):
-    get_samples_url = f"http://localhost:8000/document_app/api/documents/{document_id}/get_samples/"
+    get_samples_url = (
+        f"http://localhost:8000/document_app/api/documents/{document_id}/get_samples/"
+    )
 
     with requests.Session() as session:
         res_samples = session.get(get_samples_url)
@@ -23,7 +25,7 @@ def get_sample_data(document_id: int):
 
         with requests.Session() as session:
             res_boxes = session.get(get_sample_boxes_url)
-        
+
         if res_boxes.status_code != 200:
             raise ValueError(f"cannot retrieve boxes for sample: {sample_id}")
         else:
@@ -37,12 +39,14 @@ def get_sample_data(document_id: int):
     for sample in samples:
         with requests.Session() as session:
             res_image = session.get("http://localhost:8000/" + sample["image"])
-        
+
         if res_image.status_code == 200:
             sample_image = Image.open(BytesIO(res_image.content))
         else:
-            raise ValueError(f"could not retrieve the image error: {res_image.status_code}")
-        
+            raise ValueError(
+                f"could not retrieve the image error: {res_image.status_code}"
+            )
+
         images.append({"sample_id": sample["id"], "image": sample_image})
-        
+
     return images, box_labels

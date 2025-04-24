@@ -22,7 +22,7 @@ with DAG(
     schedule_interval=None,
     catchup=False,
 ) as dag:
-        
+
     sample_preprocessing = DockerOperator(
         task_id="sample_preprocessing",
         image="document-generator-jobs:latest",
@@ -30,9 +30,16 @@ with DAG(
         auto_remove=True,
         docker_url="unix://var/run/docker.sock",
         network_mode="host",
-        mounts=[Mount(source="/Users/volpea/Documents/projects/document-generator-job/data", target="/app/data", type="bind")],
+        mounts=[
+            Mount(
+                source="/Users/volpea/Documents/projects/document-generator-job/data",
+                target="/app/data",
+                type="bind",
+            )
+        ],
         mount_tmp_dir=False,
-        command="--job_name sample_preprocessing" + " {{ '--document_id ' + dag_run.conf['document_id'] }}",
+        command="--job_name sample_preprocessing"
+        + " {{ '--document_id ' + dag_run.conf['document_id'] }}",
     )
 
     training = DockerOperator(
@@ -42,9 +49,19 @@ with DAG(
         auto_remove=True,
         docker_url="unix://var/run/docker.sock",
         network_mode="host",
-        shm_size=2*1024*1024*1024,
-        mounts=[Mount(source="/Users/volpea/Documents/projects/document-generator-job/data", target="/data", type="bind"),
-                Mount(source="/Users/volpea/Documents/projects/PaddleOCR/models", target="/models", type="bind")],
+        shm_size=2 * 1024 * 1024 * 1024,
+        mounts=[
+            Mount(
+                source="/Users/volpea/Documents/projects/document-generator-job/data",
+                target="/data",
+                type="bind",
+            ),
+            Mount(
+                source="/Users/volpea/Documents/projects/PaddleOCR/models",
+                target="/models",
+                type="bind",
+            ),
+        ],
         mount_tmp_dir=False,
         command="./document_app/train_new_model.sh /data/fine_tuning_dataset {{ dag_run.conf['document_id'] }}",
     )

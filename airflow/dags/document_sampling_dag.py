@@ -22,7 +22,7 @@ with DAG(
     schedule_interval=None,
     catchup=False,
 ) as dag:
-        
+
     generate_samples = DockerOperator(
         task_id="generate_samples",
         image="document-generator-jobs:latest",
@@ -30,7 +30,14 @@ with DAG(
         auto_remove=True,
         docker_url="unix://var/run/docker.sock",
         network_mode="host",
-        mounts=[Mount(source="/Users/volpea/Documents/projects/document-generator-job/data", target="/app/data", type="bind")],
+        mounts=[
+            Mount(
+                source="/Users/volpea/Documents/projects/document-generator-job/data",
+                target="/app/data",
+                type="bind",
+            )
+        ],
         mount_tmp_dir=False,
-        command="--job_name sampling" + " {{ '--document_id ' + dag_run.conf['document_id'] + ' --num_samples ' + dag_run.conf['num_samples']  + ' --publish'}}",
+        command="--job_name sampling"
+        + " {{ '--document_id ' + dag_run.conf['document_id'] + ' --num_samples ' + dag_run.conf['num_samples']  + ' --publish'}}",
     )
