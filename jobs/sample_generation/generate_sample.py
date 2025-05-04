@@ -5,6 +5,7 @@ import random
 from pathlib import Path
 from tqdm import tqdm
 import json
+from copy import deepcopy
 
 from .api_utils import get_image_and_boxes, publish_box_labels, publish_sample_image
 from .image_utils import (
@@ -53,11 +54,11 @@ def run_sampling(
         f"Generating {num_samples} for document_id: {document_id}, veriosn: {version}, dataset_type: {dataset_type}"
     )
     logger.info(f"Publish to the server: {publish}")
-    sample_folder = (
-        output_base_path / Path(f"sampling/document_{document_id}/{version}/{dataset_type}/")
+    sample_folder = output_base_path / Path(
+        f"sampling/document_{document_id}/{version}/{dataset_type}/"
     )
-    label_folder = (
-        output_base_path / Path(f"labels/document_{document_id}/{version}/{dataset_type}/")
+    label_folder = output_base_path / Path(
+        f"labels/document_{document_id}/{version}/{dataset_type}/"
     )
 
     sample_folder.mkdir(parents=True, exist_ok=True)
@@ -142,9 +143,9 @@ def run_sampling(
         else:
             raise ValueError("unable to save text only image")
 
-        labels.update({sample_filename: boxes_labels})
+        labels.update({sample_filename: deepcopy(boxes_labels)})
 
-        # Save Annotations in PaddleOCR format, TODO PaddleOCR should be responsible for this, converting from json to paddleocr format
+        # Save Annotations in PaddleOCR format, TODO PaddleOCR should be responsible for converting from json to paddleocr format
         annotations = get_annotations(boxes_labels, sample_filename)
         with open(sample_folder.parent / f"{dataset_type}_labels.txt", "a") as file:
             file.write(annotations + "\n")

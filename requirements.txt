@@ -5,3 +5,4 @@ requests==2.32.3
 pillow==11.0.0
 emnist==0.0
 matplotlib==3.10.1
+PyYAML==6.0.2

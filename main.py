@@ -39,7 +39,6 @@ if __name__ == "__main__":
 
         job_args = {
             "document_id": args.document_id,
-            "num_samples": args.num_samples,
             "version": version,
             "publish": args.publish,
         }
@@ -54,10 +53,12 @@ if __name__ == "__main__":
         run_sampling(
             **job_args,
             dataset_type="train",
+            num_samples=num_samples_train,
         )
         run_sampling(
             **job_args,
             dataset_type="test",
+            num_samples=num_samples_test,
         )
     elif args.job_name == "sample_preprocessing":
         run_sample_preprocessing(document_id=args.document_id)

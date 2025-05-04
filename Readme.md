@@ -29,8 +29,8 @@ python main.py --job_name sample_preprocessing --document_id 5
 ```bash
 docker build . -t document-generator-jobs:latest
 docker run --rm \
-           --network host \
            --mount type=bind,source=./data,target=/app/data \
+           --env-file .env.dev \
            --name document-generator-jobs \
            document-generator-jobs:latest --job_name sampling --document_id 3 --num_samples 10
 ```

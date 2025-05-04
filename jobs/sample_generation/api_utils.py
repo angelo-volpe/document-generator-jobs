@@ -1,16 +1,20 @@
 import requests
+import os
 
 from ..logging_config import logger
 from .models import Box
+
+document_api_host = os.environ.get("DOCUMENT_API_HOST", "localhost")
+document_api_port = os.environ.get("DOCUMENT_API_PORT", "8000")
 
 
 def get_image_and_boxes(document_id: str):
     with requests.Session() as session:
         res_document = session.get(
-            f"http://localhost:8000/document_app/api/documents/{document_id}"
+            f"http://{document_api_host}:{document_api_port}/document_app/api/documents/{document_id}"
         )
         res_boxes = session.get(
-            f"http://localhost:8000/document_app/api/documents/{document_id}/get_boxes/"
+            f"http://{document_api_host}:{document_api_port}/document_app/api/documents/{document_id}/get_boxes/"
         )
 
         if res_document.status_code == 200 and res_boxes.status_code == 200:
@@ -34,7 +38,7 @@ def get_image_and_boxes(document_id: str):
 
 
 def publish_sample_image(image_path, sample_id, document_id):
-    url = "http://localhost:8000/document_app/api/sample_documents/"
+    url = f"http://{document_api_host}:{document_api_port}/document_app/api/sample_documents/"
     files = {"image": open(image_path, "rb")}
     data = {"name": f"sample_{sample_id}", "template_document": document_id}
 
@@ -50,7 +54,7 @@ def publish_sample_image(image_path, sample_id, document_id):
 
 
 def publish_box_labels(boxes_labels, sample_document_id):
-    url = "http://localhost:8000/document_app/api/sample_boxes/create_sample_boxes/"
+    url = f"http://{document_api_host}:{document_api_port}/document_app/api/sample_boxes/create_sample_boxes/"
     data = {"sample_document_id": sample_document_id, "boxes": boxes_labels}
 
     with requests.Session() as session:
